@@ -1,12 +1,15 @@
+
 package de.nikey.combatLog.Listener;
 
 import com.destroystokyo.paper.event.player.PlayerElytraBoostEvent;
 import de.nikey.combatLog.CombatLog;
 import de.nikey.combatLog.Combat.CombatManager;
 import de.nikey.combatLog.Config.PluginConfig;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -127,7 +130,7 @@ public class CombatRestrictionListener implements Listener {
         if (!combat.isInCombat(player)) return;
         if (player.hasPermission("combatlog.bypass")) return;
 
-        long now  = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
         long last = riptideCooldowns.getOrDefault(player.getUniqueId(), 0L);
 
         if (now - last >= config.riptideCooldownMs()) {
@@ -137,6 +140,21 @@ public class CombatRestrictionListener implements Listener {
             applyDamage(player);
             player.sendMessage(config.message("combat-log.messages.riptide-denied", "&cYou can't use riptide in combat"));
         }
+    }
+
+    // ── Ender Chest ────────────────────────────────────────────────────────────
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEnderChestInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getClickedBlock() == null) return;
+        if (event.getClickedBlock().getType() != Material.ENDER_CHEST) return;
+
+        Player player = event.getPlayer();
+        if (!combat.isInCombat(player)) return;
+        if (player.hasPermission("combatlog.bypass")) return;
+
+        event.setCancelled(true);
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────
